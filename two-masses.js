@@ -18,7 +18,7 @@ socket.on("load", function(data){
 });
 
 
-function Ball(radius,color,mass,charge,gradient){
+function Ball(radius,color,mass,charge,gradient, x, y, vx,vy){
 	if(typeof(radius)==='undefined') radius = 20;
 	if(typeof(color)==='undefined') color = '#0000ff';
 	if(typeof(mass)==='undefined') mass = 1;
@@ -29,10 +29,10 @@ function Ball(radius,color,mass,charge,gradient){
 	this.mass = mass;
 	this.charge = charge;
 	this.gradient = gradient;
-	this.x = 0;
-	this.y = 0;
-	this.vx = 0;
-	this.vy = 0;	
+	this.x = x;
+	this.y = y;
+	this.vx =vx;
+	this.vy = vy;	
 
 }		
 
@@ -80,27 +80,28 @@ function init() {
 	};
 
 	
-     for (var i=0; i<1000; i++){
+    for (var i=0; i<1000; i++){
           var star = new Ball(Math.random()*2,'#ffff00');
           star.pos2D= new Vector2D(Math.random()*canvas_bg.width,Math.random()*canvas_bg.height);
           star.draw(context_bg);
      }
-	var ball1Init = new Ball(r1,'#9999ff',m1,0,true);
+
+	var ball1Init = new Ball(r1,'#9999ff',m1,0,true,0,0,0,0);
 	ball1Init.pos2D = new Vector2D(150, 300);
 	ball1Init.draw(context_bg);
 		
-	var ball2Init = new Ball(r2,'#ff9999',m2,0,true);		
+	var ball2Init = new Ball(r2,'#ff9999',m2,0,true,0,0,0,0);		
 	ball2Init.pos2D = new Vector2D(350,200);
 	ball2Init.draw(context_bg);				
 		
-	ball1 = new Ball(r1,'#0000ff',m1,0,true);				
+	ball1 = new Ball(r1,'#0000ff',m1,0,true,0,0,0,0);				
 	ball1.pos2D = ball1Init.pos2D;
 	ball1.velo2D = new Vector2D(0,150);
 			
 	ball1.draw(context);
 	balls.ball.push(ball1);
 			
-	ball2 = new Ball(r2,'#ff0000',m2,0,true);
+	ball2 = new Ball(r2,'#ff0000',m2,0,true,0,0,0,0);
 	ball2.pos2D = ball2Init.pos2D;	
 	ball2.velo2D = new Vector2D(0,0);		
 	ball2.draw(context);
@@ -108,6 +109,62 @@ function init() {
 			
 	t0 = new Date().getTime(); 
 	animFrame();
+
+	var save = document.getElementById('save');
+
+       var load = document.getElementById('load');
+       
+       //socket.on("load", function(data){
+       	save.onclick = function(e){
+       		e.preventDefault();
+       		console.log("save button clicked");
+       		console.log(balls.ball.length);
+       		var sentData = {studentname: "Yikalo Ekubazgi", statename: "aState", state:[]};
+       		for (var i = 0; i < balls.ball.length; i++) {
+       			sentData.state.push({ radius: balls.ball[i].radius,
+	color:balls.ball[i].color,
+	mass:balls.ball[i].mass,
+	charge:balls.ball[i].charge,
+	gradient: balls.ball[i].gradient,
+
+	x:balls.ball[i].x,
+	y:balls.ball[i].y,
+	vx :balls.ball[i].vx,
+	vy: balls.ball[i].vy});
+       			console.log(sentData.state[i]);
+       		}
+       		console.log(sentData);
+       		socket.emit("save", sentData);
+       	}
+
+       	load.onclick = function(e){
+       		e.preventDefault();
+            console.log("Trying to load");
+
+       		socket.emit("load", { studentname: "Yikalo Ekubazgi", statename: "aState" });
+       		
+       	}
+
+
+       	socket.on("load", function(data) {
+       		var ent = data.state;
+    		// for (var i = 0; i < data.state.length; i++) {
+      //  			console.log(dats.state[i]);
+      //  			//balls.ball.push(sentData.state[i]);
+      //  		}
+       		console.log("loaded balls" + ent);
+       		console.log("load button clicked");
+       	});
+
+       	socket.on("connect", function () {
+            console.log("Socket connected.")
+        });
+        socket.on("disconnect", function () {
+            console.log("Socket disconnected.")
+        });
+        socket.on("reconnect", function () {
+            console.log("Socket reconnected.")
+        });
 	
 
 };
@@ -143,28 +200,7 @@ function update(obj){
 	updateVelo(obj);
 
 
-	   var save = document.getElementById('save');
-       var load = document.getElementById('load');
-       var sentData = {ball:[] };
-       //socket.on("load", function(data){
-       	save.onclick = function(){
-       		console.log("save button clicked");
-       		console.log(balls.ball.length);
-       		for (var i = 0; i < balls.ball.length; i++) {
-       			sentData.ball.push(balls.ball[i]);
-       		}
-       		console.log(sentData);
-       		socket.emit("save", { studentname: "Yikalo Ekubazgi", statename: "aState", data: sentData });
-       	}
-       	load.onclick = function(){
-       		
-       		socket.emit("load", { studentname: "Yikalo Ekubazgi", statename: "aState" });
-       		for (var i = 0; i < sentData.ball.length; i++) {
-       			balls.ball.push(sentData.ball[i]);
-       		}
-       		console.log("loaded balls" + balls);
-       		console.log("load button clicked");
-       	}
+	   
        //});
     
     
